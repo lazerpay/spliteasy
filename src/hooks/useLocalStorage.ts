@@ -3,6 +3,7 @@ import { LocalStorageService } from '../services/localStorageService';
 import { UserService } from '../services/userService';
 import { User, FinancialSummary, Transaction, Group, Friend } from '../types/schema';
 import { TransactionStatus } from '../types/enums';
+import { updateUsernameInData } from '../utils/usernameUpdater';
 
 export function useLocalStorage() {
   const [user, setUser] = useState<User | null>(null);
@@ -62,6 +63,35 @@ export function useLocalStorage() {
   };
 
   const updateUser = (updatedUser: User) => {
+    const oldUsername = user?.name;
+    const newUsername = updatedUser.name;
+    
+    // If username changed, update all references in transactions and groups
+    if (oldUsername && newUsername && oldUsername !== newUsername) {
+      const { updatedTransactions, updatedGroups } = updateUsernameInData(
+        oldUsername,
+        newUsername,
+        transactions,
+        groups
+      );
+      
+      // Update transactions and groups with new username references
+      setTransactions(updatedTransactions);
+      setGroups(updatedGroups);
+      LocalStorageService.setTransactions(updatedTransactions);
+      LocalStorageService.setGroups(updatedGroups);
+      
+      // Recalculate summary with updated data
+      const newSummary = calculateSummary(updatedTransactions, newUsername);
+      setSummary(newSummary);
+      LocalStorageService.setSummary(newSummary);
+      
+      // Recalculate group balances with updated data
+      const recalculatedGroups = calculateGroupBalances(updatedTransactions, updatedGroups, newUsername);
+      setGroups(recalculatedGroups);
+      LocalStorageService.setGroups(recalculatedGroups);
+    }
+    
     setUser(updatedUser);
     LocalStorageService.setUser(updatedUser);
   };

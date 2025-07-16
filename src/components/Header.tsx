@@ -1,5 +1,6 @@
 import { AppShell, Group, ActionIcon, Menu, Avatar, Text, Burger } from '@mantine/core';
-import { Bell, LogOut, User, Settings } from 'lucide-react';
+import { Bell, User, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { User as UserType } from '../types/schema';
 import { Logo } from './Logo';
 
@@ -10,6 +11,15 @@ interface HeaderProps {
 }
 
 export function Header({ user, opened, toggle }: HeaderProps) {
+  const navigate = useNavigate();
+
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
+
+  const handleSettingsClick = () => {
+    navigate('/settings');
+  };
   return (
     <AppShell.Header p="md">
       <Group justify="space-between" h="100%">
@@ -39,15 +49,17 @@ export function Header({ user, opened, toggle }: HeaderProps) {
             </Menu.Target>
 
             <Menu.Dropdown>
-              <Menu.Item leftSection={<User size={16} />}>
+              <Menu.Item 
+                leftSection={<User size={16} />}
+                onClick={handleProfileClick}
+              >
                 Profile
               </Menu.Item>
-              <Menu.Item leftSection={<Settings size={16} />}>
+              <Menu.Item 
+                leftSection={<Settings size={16} />}
+                onClick={handleSettingsClick}
+              >
                 Settings
-              </Menu.Item>
-              <Menu.Divider />
-              <Menu.Item leftSection={<LogOut size={16} />} color="red">
-                Logout
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
