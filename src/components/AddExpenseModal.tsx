@@ -14,6 +14,7 @@ interface AddExpenseModalProps {
   groups: GroupType[];
   currentUser: string;
   onGroupCreate: (group: GroupType) => void;
+  preselectedGroupId?: string;
 }
 
 export function AddExpenseModal({ 
@@ -22,7 +23,8 @@ export function AddExpenseModal({
   onSubmit, 
   groups, 
   currentUser,
-  onGroupCreate 
+  onGroupCreate,
+  preselectedGroupId 
 }: AddExpenseModalProps) {
   const [createGroupModalOpened, { open: openCreateGroupModal, close: closeCreateGroupModal }] = useDisclosure(false);
   const [newlyCreatedGroupId, setNewlyCreatedGroupId] = useState<string>('');
@@ -102,6 +104,7 @@ export function AddExpenseModal({
           onGroupCreate={handleGroupCreate}
           onOpenCreateGroupModal={openCreateGroupModal}
           newlyCreatedGroupId={newlyCreatedGroupId}
+          preselectedGroupId={preselectedGroupId}
         />
       </Modal>
 

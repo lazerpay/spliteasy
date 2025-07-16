@@ -1,19 +1,37 @@
-import { Card, Text, Group, Avatar, Badge } from '@mantine/core';
+import { Card, Text, Group, Avatar, Badge, Stack } from '@mantine/core';
 import { Users } from 'lucide-react';
-import { Group as GroupType } from '../types/schema';
+import { Group as GroupType, Transaction } from '../types/schema';
 import { TransactionStatus } from '../types/enums';
 import { formatCurrency } from '../utils/formatters';
+import { DeleteGroupButton } from './DeleteGroupButton';
+import { GroupActionButtons } from './GroupActionButtons';
 
 interface GroupCardProps {
   group: GroupType;
+  transactions: Transaction[];
+  currentUser: string;
+  onDeleteGroup: (groupId: string) => void;
+  onRemoveMember: (groupId: string, memberName: string) => void;
+  onMarkMemberAsSettled: (groupId: string, memberName: string) => void;
+  onViewMembers: (group: GroupType) => void;
+  onShowActivity: (group: GroupType) => void;
   onClick?: () => void;
 }
 
-export function GroupCard({ group, onClick }: GroupCardProps) {
+export function GroupCard({ 
+  group, 
+  transactions, 
+  currentUser, 
+  onDeleteGroup, 
+  onRemoveMember, 
+  onMarkMemberAsSettled, 
+  onViewMembers,
+  onShowActivity,
+  onClick 
+}: GroupCardProps) {
   const hasActivity = group.expenses && group.expenses.length > 0;
-  const hasBalance = Math.abs(group.totalBalance) > 0.01; // Account for floating point precision
+  const hasBalance = Math.abs(group.totalBalance) > 0.01;
   
-  // Check if all activities are settled
   const allActivitiesSettled = hasActivity && 
     group.expenses!.every(expense => expense.status === TransactionStatus.SETTLED);
 
@@ -24,10 +42,8 @@ export function GroupCard({ group, onClick }: GroupCardProps) {
   };
 
   const getBalanceText = () => {
-    // Don't show status if no activity
     if (!hasActivity) return null;
     
-    // Show settled message if balance is 0 or all activities are settled
     if (!hasBalance || allActivitiesSettled) {
       return '🔥 All settled up';
     }
@@ -45,27 +61,43 @@ export function GroupCard({ group, onClick }: GroupCardProps) {
       radius="md" 
       withBorder 
       style={{ cursor: onClick ? 'pointer' : 'default' }}
-      onClick={onClick}
     >
-      <Group justify="space-between" mb={getBalanceText() ? "md" : undefined}>
-        <Group gap="md">
-          <Avatar src={group.avatar} size="md" radius="md">
-            <Users size={20} />
-          </Avatar>
-          <Text fw={700} fz="16px">
-            {group.name}
-          </Text>
+      <Stack gap="md">
+        {/* Group Header */}
+        <Group justify="space-between">
+          <Group gap="md" onClick={onClick} style={{ cursor: onClick ? 'pointer' : 'default', flex: 1 }}>
+            <Avatar src={group.avatar} size="md" radius="md">
+              <Users size={20} />
+            </Avatar>
+            <Group gap="xs" align="center">
+              <Text fw={700} fz="16px">
+                {group.name}
+              </Text>
+              <Badge variant="light" color="blue" fz="12px">
+                {group.memberCount} members
+              </Badge>
+            </Group>
+          </Group>
+          
+          <DeleteGroupButton 
+            groupName={group.name}
+            onDelete={() => onDeleteGroup(group.id)}
+          />
         </Group>
-        <Badge variant="light" color="blue" fz="12px">
-          {group.memberCount} members
-        </Badge>
-      </Group>
 
-      {getBalanceText() && (
-        <Text fz="14px" c={getBalanceColor()} fw={500}>
-          {getBalanceText()}
-        </Text>
-      )}
+        {/* Balance Status */}
+        {getBalanceText() && (
+          <Text fz="14px" c={getBalanceColor()} fw={500}>
+            {getBalanceText()}
+          </Text>
+        )}
+
+        {/* Action Buttons */}
+        <GroupActionButtons
+          onViewMembers={() => onViewMembers(group)}
+          onShowActivity={() => onShowActivity(group)}
+        />
+      </Stack>
     </Card>
   );
 }

@@ -111,6 +111,17 @@ export function ActivityItem({ transaction, onMarkAsSettled, onDelete }: Activit
               </Text>
             )}
             
+            {transaction.splitBetween && transaction.splitBetween.length > 0 && (
+              <Text fz="14px" c="dimmed">
+                Split between: {transaction.splitBetween.join(', ')}
+                {transaction.amount && transaction.splitBetween.length > 1 && (
+                  <Text component="span" fw={500} ml={4}>
+                    ({formatCurrency(transaction.amount / transaction.splitBetween.length)} per person)
+                  </Text>
+                )}
+              </Text>
+            )}
+            
             {transaction.status && (
               <Badge fz="12px" color={getStatusColor()} variant="light">
                 {transaction.status.replace('_', ' ')}

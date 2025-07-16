@@ -234,6 +234,155 @@ export function useLocalStorage() {
     LocalStorageService.setGroups(updatedGroups);
   };
 
+  const deleteAllGroups = () => {
+    setGroups([]);
+    LocalStorageService.setGroups([]);
+    
+    // Also remove group references from transactions
+    const updatedTransactions = transactions.map(transaction => ({
+      ...transaction,
+      groupName: undefined
+    }));
+    setTransactions(updatedTransactions);
+    LocalStorageService.setTransactions(updatedTransactions);
+    
+    // Recalculate summary without group data
+    if (user) {
+      const newSummary = calculateSummary(updatedTransactions, user.name);
+      setSummary(newSummary);
+      LocalStorageService.setSummary(newSummary);
+    }
+  };
+
+  const deleteGroup = (groupId: string) => {
+    const groupToDelete = groups.find(g => g.id === groupId);
+    if (!groupToDelete) return;
+
+    const updatedGroups = groups.filter(g => g.id !== groupId);
+    setGroups(updatedGroups);
+    LocalStorageService.setGroups(updatedGroups);
+    
+    // Remove group references from transactions
+    const updatedTransactions = transactions.map(transaction => 
+      transaction.groupName === groupToDelete.name 
+        ? { ...transaction, groupName: undefined }
+        : transaction
+    );
+    setTransactions(updatedTransactions);
+    LocalStorageService.setTransactions(updatedTransactions);
+    
+    // Recalculate summary
+    if (user) {
+      const newSummary = calculateSummary(updatedTransactions, user.name);
+      setSummary(newSummary);
+      LocalStorageService.setSummary(newSummary);
+    }
+  };
+
+  const removeMemberFromGroup = (groupId: string, memberName: string) => {
+    const updatedGroups = groups.map(group => {
+      if (group.id === groupId) {
+        const updatedMembers = group.members.filter(member => member !== memberName);
+        return {
+          ...group,
+          members: updatedMembers,
+          memberCount: updatedMembers.length
+        };
+      }
+      return group;
+    });
+    
+    setGroups(updatedGroups);
+    LocalStorageService.setGroups(updatedGroups);
+    
+    // Remove member from group transactions
+    const updatedTransactions = transactions.map(transaction => {
+      if (transaction.groupName === groups.find(g => g.id === groupId)?.name && 
+          transaction.splitBetween?.includes(memberName)) {
+        return {
+          ...transaction,
+          splitBetween: transaction.splitBetween.filter(member => member !== memberName)
+        };
+      }
+      return transaction;
+    });
+    
+    setTransactions(updatedTransactions);
+    LocalStorageService.setTransactions(updatedTransactions);
+    
+    // Recalculate balances
+    if (user) {
+      const newSummary = calculateSummary(updatedTransactions, user.name);
+      setSummary(newSummary);
+      LocalStorageService.setSummary(newSummary);
+      
+      const recalculatedGroups = calculateGroupBalances(updatedTransactions, updatedGroups, user.name);
+      setGroups(recalculatedGroups);
+      LocalStorageService.setGroups(recalculatedGroups);
+    }
+  };
+
+  const markMemberAsSettled = (groupId: string, memberName: string) => {
+    const group = groups.find(g => g.id === groupId);
+    if (!group || !user) return;
+
+    // Find all pending transactions in this group involving this member
+    const updatedTransactions = transactions.map(transaction => {
+      if (transaction.groupName === group.name && 
+          transaction.splitBetween?.includes(memberName) &&
+          transaction.status !== TransactionStatus.SETTLED) {
+        return { ...transaction, status: TransactionStatus.SETTLED };
+      }
+      return transaction;
+    });
+    
+    setTransactions(updatedTransactions);
+    LocalStorageService.setTransactions(updatedTransactions);
+    
+    // Recalculate balances
+    const newSummary = calculateSummary(updatedTransactions, user.name);
+    setSummary(newSummary);
+    LocalStorageService.setSummary(newSummary);
+    
+    const updatedGroups = calculateGroupBalances(updatedTransactions, groups, user.name);
+    setGroups(updatedGroups);
+    LocalStorageService.setGroups(updatedGroups);
+  };
+
+  const clearGroupActivity = (groupId: string) => {
+    const group = groups.find(g => g.id === groupId);
+    if (!group || !user) return;
+
+    // Remove all transactions for this group
+    const updatedTransactions = transactions.filter(transaction => 
+      transaction.groupName !== group.name
+    );
+    
+    setTransactions(updatedTransactions);
+    LocalStorageService.setTransactions(updatedTransactions);
+    
+    // Recalculate balances
+    const newSummary = calculateSummary(updatedTransactions, user.name);
+    setSummary(newSummary);
+    LocalStorageService.setSummary(newSummary);
+    
+    // Update group to remove expenses
+    const updatedGroups = groups.map(g => {
+      if (g.id === groupId) {
+        return {
+          ...g,
+          totalBalance: 0,
+          expenses: []
+        };
+      }
+      return g;
+    });
+    
+    const recalculatedGroups = calculateGroupBalances(updatedTransactions, updatedGroups, user.name);
+    setGroups(recalculatedGroups);
+    LocalStorageService.setGroups(recalculatedGroups);
+  };
+
   const addFriend = (friend: Friend) => {
     const updatedFriends = [...friends, friend];
     setFriends(updatedFriends);
@@ -264,6 +413,11 @@ export function useLocalStorage() {
     updateTransaction,
     deleteTransaction,
     addGroup,
+    deleteGroup,
+    deleteAllGroups,
+    removeMemberFromGroup,
+    markMemberAsSettled,
+    clearGroupActivity,
     addFriend,
     completeOnboarding,
     clearAllData,

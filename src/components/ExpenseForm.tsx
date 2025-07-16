@@ -44,6 +44,7 @@ interface ExpenseFormProps {
   onGroupCreate: (group: GroupType) => void;
   onOpenCreateGroupModal: () => void;
   newlyCreatedGroupId?: string;
+  preselectedGroupId?: string;
 }
 
 const expenseCategories = [
@@ -63,7 +64,7 @@ const expenseTypes = [
   { value: 'personal', label: 'Personal expense', description: 'Your own expense, not shared with others' }
 ];
 
-export function ExpenseForm({ onSubmit, onCancel, groups, currentUser, onGroupCreate, onOpenCreateGroupModal, newlyCreatedGroupId }: ExpenseFormProps) {
+export function ExpenseForm({ onSubmit, onCancel, groups, currentUser, onGroupCreate, onOpenCreateGroupModal, newlyCreatedGroupId, preselectedGroupId }: ExpenseFormProps) {
   const [amount, setAmount] = useState<number | string>('');
   const [description, setDescription] = useState('');
   const [groupId, setGroupId] = useState<string>('');
@@ -75,13 +76,16 @@ export function ExpenseForm({ onSubmit, onCancel, groups, currentUser, onGroupCr
   const selectedGroup = groups.find(g => g.id === groupId);
   const groupMembers = selectedGroup?.members || [];
 
-  // Auto-select newly created group
+  // Auto-select newly created group or preselected group
   useEffect(() => {
     if (newlyCreatedGroupId && groups.find(g => g.id === newlyCreatedGroupId)) {
       setGroupId(newlyCreatedGroupId);
       setExpenseType('you_are_owed'); // Default to "you are owed" for new groups
+    } else if (preselectedGroupId && groups.find(g => g.id === preselectedGroupId)) {
+      setGroupId(preselectedGroupId);
+      setExpenseType('you_are_owed'); // Default to "you are owed" for preselected groups
     }
-  }, [newlyCreatedGroupId, groups]);
+  }, [newlyCreatedGroupId, preselectedGroupId, groups]);
 
   // Filter expense types based on whether a group is selected
   const availableExpenseTypes = groupId 

@@ -14,11 +14,12 @@ import { Plus, Handshake, Users, UserPlus } from 'lucide-react';
 import { TransactionStatus } from '../types/enums';
 import { useDisclosure } from '@mantine/hooks';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { FinancialSummaryCard } from './FinancialSummaryCard';
 import { QuickActionButton } from './QuickActionButton';
 import { ActivityItem } from './ActivityItem';
-import { GroupCard } from './GroupCard';
+import { SimpleGroupCard } from './SimpleGroupCard';
 import { FriendItem } from './FriendItem';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
@@ -28,6 +29,7 @@ import { CreateGroupModal } from './CreateGroupModal';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export function Dashboard() {
+  const navigate = useNavigate();
   const [opened, { toggle }] = useDisclosure();
   const [expenseModalOpened, { open: openExpenseModal, close: closeExpenseModal }] = useDisclosure(false);
   const [createGroupModalOpened, { open: openCreateGroupModal, close: closeCreateGroupModal }] = useDisclosure(false);
@@ -79,6 +81,14 @@ export function Dashboard() {
 
   const handleDeleteTransaction = (transactionId: string) => {
     deleteTransaction(transactionId);
+  };
+
+  const handleViewAllActivity = () => {
+    navigate('/history');
+  };
+
+  const handleViewAllGroups = () => {
+    navigate('/groups');
   };
 
   if (isLoading) {
@@ -263,7 +273,7 @@ export function Dashboard() {
               <Stack gap="md">
                 <Group justify="space-between">
                   <Title order={3}>Recent Activity</Title>
-                  <Button variant="subtle" size="sm">
+                  <Button variant="subtle" size="sm" onClick={handleViewAllActivity}>
                     View All
                   </Button>
                 </Group>
@@ -291,13 +301,16 @@ export function Dashboard() {
               <Stack gap="md">
                 <Group justify="space-between">
                   <Title order={3}>My Groups</Title>
-                  <Button variant="subtle" size="sm">
+                  <Button variant="subtle" size="sm" onClick={handleViewAllGroups}>
                     View All
                   </Button>
                 </Group>
                 <SimpleGrid cols={1} spacing="md">
                   {groups.slice(0, 3).map((group) => (
-                    <GroupCard key={group.id} group={group} />
+                    <SimpleGroupCard 
+                      key={group.id} 
+                      group={group}
+                    />
                   ))}
                 </SimpleGrid>
               </Stack>
