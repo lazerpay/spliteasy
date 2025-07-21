@@ -3,7 +3,7 @@ import {
   Title, 
   SimpleGrid, 
   Stack,
-  Group,
+  Group as MantineGroup,
   Text
 } from '@mantine/core';
 import { 
@@ -48,10 +48,10 @@ export function ProfileStatistics({ user, transactions, groups }: ProfileStatist
   return (
     <Paper p="xl" radius="md" withBorder>
       <Stack gap="lg">
-        <Group gap="md">
+        <MantineGroup gap="md">
           <BarChart3 size={24} color="var(--mantine-color-dimmed)" />
           <Title order={3}>Activity Statistics</Title>
-        </Group>
+        </MantineGroup>
 
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
           <StatisticCard
@@ -113,10 +113,10 @@ export function ProfileStatistics({ user, transactions, groups }: ProfileStatist
         {stats.largestTransaction && (
           <Paper p="md" radius="md" bg="gray.0" style={{ border: '1px solid var(--mantine-color-gray-3)' }}>
             <Stack gap="xs">
-              <Group gap="sm">
+                <MantineGroup gap="sm">
                 <CheckCircle size={16} color="var(--mantine-color-green-6)" />
                 <Text fw={600} fz="sm">Largest Transaction</Text>
-              </Group>
+              </MantineGroup>
               <Text fz="lg" fw={700} c="green">
                 ${stats.largestTransaction.amount.toFixed(2)}
               </Text>

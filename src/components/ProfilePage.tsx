@@ -19,16 +19,20 @@ import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { ProfileForm } from './ProfileForm';
 import { ProfileStatistics } from './ProfileStatistics';
+import { CashbackSection } from './CashbackSection';
+import { InviteFriendsModal } from './InviteFriendsModal';
 import { DangerZone } from './DangerZone';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export function ProfilePage() {
   const [opened, { toggle }] = useDisclosure();
   const [isEditing, setIsEditing] = useState(false);
+  const [inviteFriendsModalOpened, { open: openInviteFriendsModal, close: closeInviteFriendsModal }] = useDisclosure(false);
   const {
     user,
     transactions,
     groups,
+    cashbackData,
     isLoading,
     updateUser
   } = useLocalStorage();
@@ -168,11 +172,23 @@ export function ProfilePage() {
               groups={groups}
             />
 
+            {/* Cashback Section */}
+            <CashbackSection 
+              cashbackData={cashbackData}
+              onInviteFriends={openInviteFriendsModal}
+            />
+
             {/* Danger Zone */}
             <DangerZone />
           </Stack>
         </Container>
       </AppShell.Main>
+
+      {/* Invite Friends Modal */}
+      <InviteFriendsModal
+        opened={inviteFriendsModalOpened}
+        onClose={closeInviteFriendsModal}
+      />
     </AppShell>
   );
 }

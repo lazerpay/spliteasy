@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { LocalStorageService } from '../services/localStorageService';
 import { UserService } from '../services/userService';
-import { User, FinancialSummary, Transaction, Group, Friend } from '../types/schema';
-import { TransactionStatus } from '../types/enums';
+import { User, FinancialSummary, Transaction, Group, Friend, Notification, CashbackData } from '../types/schema';
+import { TransactionStatus, NotificationType, NotificationStatus } from '../types/enums';
 import { updateUsernameInData } from '../utils/usernameUpdater';
 
 export function useLocalStorage() {
@@ -11,6 +11,12 @@ export function useLocalStorage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [cashbackData, setCashbackData] = useState<CashbackData>({
+    totalEarned: 0,
+    referralCount: 0,
+    lastEarned: null
+  });
   const [isFirstTime, setIsFirstTime] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -26,6 +32,8 @@ export function useLocalStorage() {
     const storedTransactions = LocalStorageService.getTransactions();
     const storedGroups = LocalStorageService.getGroups();
     const storedFriends = LocalStorageService.getFriends();
+    const storedNotifications = LocalStorageService.getNotifications();
+    const storedCashbackData = LocalStorageService.getCashbackData();
     const firstTime = LocalStorageService.isFirstTime();
 
     if (!storedUser && firstTime) {
@@ -43,6 +51,8 @@ export function useLocalStorage() {
       setTransactions([]);
       setGroups([]);
       setFriends([]);
+      setNotifications([]);
+      setCashbackData({ totalEarned: 0, referralCount: 0, lastEarned: null });
       setIsFirstTime(true);
 
       LocalStorageService.setUser(newUser);
@@ -50,12 +60,16 @@ export function useLocalStorage() {
       LocalStorageService.setTransactions([]);
       LocalStorageService.setGroups([]);
       LocalStorageService.setFriends([]);
+      LocalStorageService.setNotifications([]);
+      LocalStorageService.setCashbackData({ totalEarned: 0, referralCount: 0, lastEarned: null });
     } else {
       setUser(storedUser);
       setSummary(storedSummary);
       setTransactions(storedTransactions);
       setGroups(storedGroups);
       setFriends(storedFriends);
+      setNotifications(storedNotifications || []);
+      setCashbackData(storedCashbackData || { totalEarned: 0, referralCount: 0, lastEarned: null });
       setIsFirstTime(firstTime);
     }
 
@@ -429,12 +443,73 @@ export function useLocalStorage() {
     loadData();
   };
 
+  // Notification methods
+  const addNotification = (notification: Notification) => {
+    const updatedNotifications = [notification, ...notifications];
+    setNotifications(updatedNotifications);
+    LocalStorageService.setNotifications(updatedNotifications);
+  };
+
+  const markNotificationAsRead = (notificationId: string) => {
+    const updatedNotifications = notifications.map(n => 
+      n.id === notificationId ? { ...n, status: NotificationStatus.READ } : n
+    );
+    setNotifications(updatedNotifications);
+    LocalStorageService.setNotifications(updatedNotifications);
+  };
+
+  const markAllNotificationsAsRead = () => {
+    const updatedNotifications = notifications.map(n => ({ ...n, status: NotificationStatus.READ }));
+    setNotifications(updatedNotifications);
+    LocalStorageService.setNotifications(updatedNotifications);
+  };
+
+  const clearAllNotifications = () => {
+    setNotifications([]);
+    LocalStorageService.setNotifications([]);
+  };
+
+  // Cashback methods
+  const addCashback = (amount: number, email: string) => {
+    const updatedCashbackData = {
+      totalEarned: cashbackData.totalEarned + amount,
+      referralCount: cashbackData.referralCount + 1,
+      lastEarned: new Date()
+    };
+    setCashbackData(updatedCashbackData);
+    LocalStorageService.setCashbackData(updatedCashbackData);
+
+    // Add notification for cashback earned
+    const notification: Notification = {
+      id: Date.now().toString(),
+      type: NotificationType.REFERRAL_ACCEPTED,
+      title: 'Referral Bonus',
+      message: `${email} has accepted your referral`,
+      amount: amount,
+      date: new Date(),
+      status: NotificationStatus.UNREAD,
+      email: email
+    };
+    addNotification(notification);
+  };
+
+  const simulateReferralAcceptance = (email: string) => {
+    setTimeout(() => {
+      addCashback(10, email);
+    }, 3000);
+  };
+
+  const unreadNotificationCount = notifications.filter(n => n.status === NotificationStatus.UNREAD).length;
+
   return {
     user,
     summary,
     transactions,
     groups,
     friends,
+    notifications,
+    cashbackData,
+    unreadNotificationCount,
     isFirstTime,
     isLoading,
     updateUser,
@@ -451,6 +526,12 @@ export function useLocalStorage() {
     addFriend,
     completeOnboarding,
     clearAllData,
-    loadData
+    loadData,
+    addNotification,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    clearAllNotifications,
+    addCashback,
+    simulateReferralAcceptance
   };
 }

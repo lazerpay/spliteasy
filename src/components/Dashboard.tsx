@@ -26,13 +26,18 @@ import { Sidebar } from './Sidebar';
 import { EmptyState } from './EmptyState';
 import { AddExpenseModal } from './AddExpenseModal';
 import { CreateGroupModal } from './CreateGroupModal';
+import { InviteFriendsModal } from './InviteFriendsModal';
+import { RecurringBillModal } from './RecurringBillModal';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { BillsStorageService } from '../services/billsStorageService';
 
 export function Dashboard() {
   const navigate = useNavigate();
   const [opened, { toggle }] = useDisclosure();
   const [expenseModalOpened, { open: openExpenseModal, close: closeExpenseModal }] = useDisclosure(false);
   const [createGroupModalOpened, { open: openCreateGroupModal, close: closeCreateGroupModal }] = useDisclosure(false);
+  const [inviteFriendsModalOpened, { open: openInviteFriendsModal, close: closeInviteFriendsModal }] = useDisclosure(false);
+  const [recurringBillModalOpened, { open: openRecurringBillModal, close: closeRecurringBillModal }] = useDisclosure(false);
   const {
     user,
     summary,
@@ -56,7 +61,10 @@ export function Dashboard() {
   };
 
   const handleSettleUp = () => {
-    console.log('Settle up clicked');
+    if (isFirstTime) {
+      completeOnboarding();
+    }
+    openRecurringBillModal();
   };
 
   const handleCreateGroup = () => {
@@ -67,7 +75,10 @@ export function Dashboard() {
   };
 
   const handleInviteFriends = () => {
-    console.log('Invite friends clicked');
+    if (isFirstTime) {
+      completeOnboarding();
+    }
+    openInviteFriendsModal();
   };
 
   const handleGetStarted = () => {
@@ -81,6 +92,15 @@ export function Dashboard() {
 
   const handleDeleteTransaction = (transactionId: string) => {
     deleteTransaction(transactionId);
+  };
+
+  const handleRecurringBillSubmit = (billData: any) => {
+    try {
+      BillsStorageService.saveBill(billData);
+      console.log('Recurring bill created and saved:', billData);
+    } catch (error) {
+      console.error('Failed to save recurring bill:', error);
+    }
   };
 
   const handleViewAllActivity = () => {
@@ -247,7 +267,7 @@ export function Dashboard() {
                   onClick={handleSettleUp}
                   fullWidth
                 >
-                  Settle Up
+                  Set up recurring bill
                 </QuickActionButton>
                 <QuickActionButton
                   leftSection={<Users size={20} />}
@@ -335,6 +355,20 @@ export function Dashboard() {
         onClose={closeCreateGroupModal}
         onSubmit={addGroup}
         currentUser={user?.name || ''}
+      />
+
+      {/* Invite Friends Modal */}
+      <InviteFriendsModal
+        opened={inviteFriendsModalOpened}
+        onClose={closeInviteFriendsModal}
+      />
+
+      {/* Recurring Bill Modal */}
+      <RecurringBillModal
+        opened={recurringBillModalOpened}
+        onClose={closeRecurringBillModal}
+        onSubmit={handleRecurringBillSubmit}
+        connectedCards={[]}
       />
     </AppShell>
   );

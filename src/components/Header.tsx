@@ -1,8 +1,12 @@
 import { AppShell, Group, ActionIcon, Menu, Avatar, Text, Burger } from '@mantine/core';
 import { Bell, User, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useDisclosure } from '@mantine/hooks';
 import { User as UserType } from '../types/schema';
 import { Logo } from './Logo';
+import { NotificationBadge } from './NotificationBadge';
+import { NotificationsDropdown } from './NotificationsDropdown';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface HeaderProps {
   user: UserType;
@@ -12,6 +16,15 @@ interface HeaderProps {
 
 export function Header({ user, opened, toggle }: HeaderProps) {
   const navigate = useNavigate();
+  const [notificationsOpened, { toggle: toggleNotifications, close: closeNotifications }] = useDisclosure(false);
+  
+  const {
+    notifications,
+    unreadNotificationCount,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    clearAllNotifications
+  } = useLocalStorage();
 
   const handleProfileClick = () => {
     navigate('/profile');
@@ -33,10 +46,36 @@ export function Header({ user, opened, toggle }: HeaderProps) {
           <Logo size="lg" />
         </Group>
 
-        <Group gap="md">
-          <ActionIcon variant="light" color="gray" size="lg">
-            <Bell size={20} />
-          </ActionIcon>
+        <Group gap="md" style={{ overflow: 'visible' }}>
+          <Menu 
+            shadow="md" 
+            opened={notificationsOpened} 
+            onChange={toggleNotifications}
+            position="bottom-end"
+            offset={5}
+          >
+            <Menu.Target>
+              <ActionIcon 
+                variant="light" 
+                color="gray" 
+                size="lg"
+                style={{ 
+                  position: 'relative',
+                  overflow: 'visible'
+                }}
+              >
+                <Bell size={20} />
+                <NotificationBadge count={unreadNotificationCount} />
+              </ActionIcon>
+            </Menu.Target>
+            
+            <NotificationsDropdown
+              notifications={notifications}
+              onMarkAsRead={markNotificationAsRead}
+              onMarkAllAsRead={markAllNotificationsAsRead}
+              onClearAll={clearAllNotifications}
+            />
+          </Menu>
 
           <Menu shadow="md" width={200}>
             <Menu.Target>

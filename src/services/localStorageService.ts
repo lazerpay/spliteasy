@@ -1,4 +1,4 @@
-import { User, FinancialSummary, Transaction, Group, Friend } from '../types/schema';
+import { User, FinancialSummary, Transaction, Group, Friend, Notification, CashbackData } from '../types/schema';
 
 const STORAGE_KEYS = {
   USER: 'splitease_user',
@@ -6,6 +6,8 @@ const STORAGE_KEYS = {
   TRANSACTIONS: 'splitease_transactions',
   GROUPS: 'splitease_groups',
   FRIENDS: 'splitease_friends',
+  NOTIFICATIONS: 'splitease_notifications',
+  CASHBACK_DATA: 'splitease_cashback_data',
   IS_FIRST_TIME: 'splitease_first_time'
 };
 
@@ -70,6 +72,39 @@ export class LocalStorageService {
   static isFirstTime(): boolean {
     const firstTimeData = localStorage.getItem(STORAGE_KEYS.IS_FIRST_TIME);
     return firstTimeData ? JSON.parse(firstTimeData) : true;
+  }
+
+  static setNotifications(notifications: Notification[]): void {
+    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifications));
+  }
+
+  static getNotifications(): Notification[] {
+    const notificationsData = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
+    if (notificationsData) {
+      const notifications = JSON.parse(notificationsData);
+      // Convert date strings back to Date objects
+      return notifications.map((n: any) => ({
+        ...n,
+        date: new Date(n.date)
+      }));
+    }
+    return [];
+  }
+
+  static setCashbackData(cashbackData: CashbackData): void {
+    localStorage.setItem(STORAGE_KEYS.CASHBACK_DATA, JSON.stringify(cashbackData));
+  }
+
+  static getCashbackData(): CashbackData | null {
+    const cashbackData = localStorage.getItem(STORAGE_KEYS.CASHBACK_DATA);
+    if (cashbackData) {
+      const data = JSON.parse(cashbackData);
+      return {
+        ...data,
+        lastEarned: data.lastEarned ? new Date(data.lastEarned) : null
+      };
+    }
+    return null;
   }
 
   static clearAllData(): void {

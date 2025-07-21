@@ -1,4 +1,4 @@
-import { TransactionType, TransactionStatus, BalanceType } from './enums';
+import { TransactionType, TransactionStatus, BalanceType, NotificationType, NotificationStatus } from './enums';
 
 // Props types (data passed to components)
 export interface User {
@@ -58,4 +58,94 @@ export interface DashboardProps {
   recentTransactions: Transaction[];
   groups: Group[];
   friends: Friend[];
+}
+
+// Type definitions for notifications and cashback system
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  amount?: number;
+  date: Date;
+  status: NotificationStatus;
+  email?: string;
+}
+
+export interface CashbackData {
+  totalEarned: number;
+  referralCount: number;
+  lastEarned: Date | null;
+}
+
+export interface NotificationState {
+  notifications: Notification[];
+  unreadCount: number;
+  cashbackData: CashbackData;
+}
+
+// Props types for recurring bill components
+export interface PaymentCard {
+  id: string;
+  type: 'Visa' | 'Mastercard' | 'American Express' | 'Discover';
+  lastFour: string;
+  expiryDate: string;
+  nameOnCard: string;
+  isDefault: boolean;
+}
+
+export interface RecurringBillData {
+  receiverName: string;
+  description: string;
+  amount: number;
+  paymentDateTime: Date;
+  paymentMethodId: string;
+  frequency: 'weekly' | 'monthly' | 'yearly';
+}
+
+export interface RecurringBillModalProps {
+  opened: boolean;
+  onClose: () => void;
+  onSubmit: (billData: RecurringBillData) => void;
+  connectedCards: PaymentCard[];
+}
+
+// Props types for recurring bills management
+export interface RecurringBill {
+  id: string;
+  receiverName: string;
+  description: string;
+  amount: number;
+  frequency: 'weekly' | 'monthly' | 'yearly';
+  paymentMethodId: string;
+  nextPaymentDate: Date;
+  lastPaidDate: Date | null;
+  createdDate: Date;
+  isActive: boolean;
+}
+
+export interface PaymentConfirmationData {
+  billId: string;
+  amount: number;
+  receiverName: string;
+  paymentMethodId: string;
+}
+
+export interface BillsPageProps {
+  bills: RecurringBill[];
+  onPayNow: (billId: string) => void;
+}
+
+export interface PaymentConfirmModalProps {
+  opened: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  paymentData: PaymentConfirmationData | null;
+  isProcessing: boolean;
+}
+
+export interface PaymentSuccessModalProps {
+  opened: boolean;
+  onClose: () => void;
+  paymentData: PaymentConfirmationData | null;
 }
